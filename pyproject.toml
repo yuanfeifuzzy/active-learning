@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "active_learning"
+version = "0.0.1"
+authors = [
+    {name="FEI YUAN", email="fei.yuan@bcm.edu"},
+    {name="Chong Lu", email="chong.lu@bcm.edu"},
+]
+description = "acl - active learning, a pipeline makes active learning easily to perform"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = 'MIT'}
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    'cmder',
+    'loguru',
+    'rdkit',
+    'numpy',
+    'scipy',
+    'pandas',
+]
+[tool.setuptools.package-data]
+"*" = ["*.sh"]
+[project.scripts]
+sampling = "active_learning.sampling:main"
+docking = "active_learning.docking:main"
