@@ -9,10 +9,11 @@ import argparse
 from pathlib import Path
 
 import cmder
+import vstool
 
 parser = argparse.ArgumentParser(prog='modeling', description=__doc__.strip())
 parser.add_argument('score', help="Path to a CSV file contains SMILES and docking scores", type=vstool.check_file)
-parser.add_argument('outdir', help="Path to a output directory for saving modeling results", type=vstool.mkdir)
+parser.add_argument('--outdir', help="Path to a output directory for saving modeling results")
 
 parser.add_argument('--debug', help='Enable debug mode (for development purpose).', action='store_true')
 parser.add_argument('--version', version=vstool.get_version(__package__), action='version')
@@ -20,11 +21,12 @@ parser.add_argument('--version', version=vstool.get_version(__package__), action
 args = parser.parse_args()
 logger = vstool.setup_logger(verbose=True)
 root = Path(__file__).parent
+setattr(args, 'outdir', vstool.mkdir(args.outdir or args.score.parent / 'model'))
     
 
 def main():
     cmd = (f'{root}/train.sh --data_path {args.score} --dataset_type regression --save_dir {args.outdir} --quiet '
-           f'&> {args.outdir}/modeling.log')
+           f'&> /dev/null')
     cmder.run(cmd)
 
 

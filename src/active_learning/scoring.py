@@ -24,6 +24,7 @@ logger = vstool.setup_logger(verbose=True)
 
 
 def parse(sdf):
+    logger.debug(f'Paring {sdf} ...')
     out = sdf.with_suffix('.csv')
     ss = []
     with Chem.SDMolSupplier(str(sdf), removeHs=False) as f:
@@ -53,8 +54,8 @@ def main():
         vstool.parallel_cpu_task(parse, outs)
         logger.debug(f'Getting docking poses and scores complete.')
 
-        cmder.run(f'cat {args.wd}/*.csv > {output}')
-        logger.debug(f'Successfully saved SMILES and scores to {output} as modeling input')
+        cmder.run(f'cat {args.wd}/*.csv > {output}', exit_on_error=True)
+        logger.debug(f'Successfully saved SMILES and scores to {output}')
 
 
 if __name__ == '__main__':

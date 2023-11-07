@@ -5,6 +5,7 @@
 Sampling chemical libraries to get random compounds
 """
 
+import os
 import time
 import argparse
 from pathlib import Path
@@ -18,7 +19,7 @@ parser = argparse.ArgumentParser(prog='active-learning', description=__doc__.str
 parser.add_argument('library', help="Path to a directory contains prepared ligand libraries", type=vstool.check_dir)
 parser.add_argument('receptor', help="Path to prepared rigid receptor in .pdbqt format file", type=vstool.check_file)
 parser.add_argument('--percent', help="Percentage of random compounds need to sample, default: %(default)s",
-                    default1=1, type=float)
+                    default=1, type=float)
 parser.add_argument('--center', help="The X, Y, and Z coordinates of the center", type=float, nargs='+')
 parser.add_argument('--size', help="The size in the X, Y, and Z dimension (Angstroms)",
                     type=int, nargs='*', default=[15, 15, 15])
@@ -60,14 +61,14 @@ def main():
 
     ntasks = args.nodes * ntasks_per_node
 
-    source = f'source {Path(vstool.check_exe("python")).parent}/activate\n\n'
+    source = f'source {Path(vstool.check_exe("python")).parent}/activate'
     cd = f'cd {args.outdir} || {{ echo "Failed to cd into {args.outdir}!"; exit 1; }}\n'
 
     (cx, cy, cz), (sx, sy, sz) = args.center, args.size
     sampling = ['sampling', str(args.library), str(args.percent), f'--outdir {wd}',
                 f'--extension {args.extension}', f'--receptor {args.receptor}',
                 f'--center {cx} {cy} {cz}', f'--size {sx} {sy} {sz}', '--debug']
-    sampling = ' \\\n  '.join(sampling)
+    sampling = ' \\\n  '.join(sampling) + '\n'
 
     docking = ['module load launcher_gpu', f'export LAUNCHER_WORKDIR={wd}',
                f'export LAUNCHER_JOB_FILE={wd}/docking.commands.txt', '',
@@ -82,7 +83,7 @@ def main():
     vstool.submit(cmd, nodes=args.nodes, ntasks=ntasks, ntasks_per_node=ntasks_per_node,
                   job_name='ACL', day=0 if args.debug else 1, hour=1 if args.debug else 23,
                   minute=59, partation=queue, email=args.email, mail_type=args.email_type,
-                  log='learning.log', script=args.outdir / 'submit.sh', delay=args.delay, 
+                  log='learning.log', script=args.outdir / 'submit.sh', delay=args.delay,
                   project=args.project)
 
 

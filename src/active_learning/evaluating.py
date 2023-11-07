@@ -9,6 +9,7 @@ import argparse
 from pathlib import Path
 
 import cmder
+import vstool
 
 parser = argparse.ArgumentParser(prog='evaluating', description=__doc__.strip())
 parser.add_argument('wd', help="Path to a directory contains SMILES files", type=vstool.check_dir)
@@ -18,16 +19,18 @@ parser.add_argument('--debug', help='Enable debug mode (for development purpose)
 parser.add_argument('--version', version=vstool.get_version(__package__), action='version')
 
 args = parser.parse_args()
+root = Path(__file__).parent
 logger = vstool.setup_logger(verbose=True)
 
 
-def predict(smile):
+def predict(smiles):
     out = smiles.with_suffix('.predict.smiles.score.csv')
     if out.exists():
         logger.debug(f'Predicting result {out} already exists, skip re-predicting')
     else:
-        cmd = f'predict.sh --test_path {smile} --checkpoint_dir {args.model} --preds_path {out} --quiet'
+        cmd = f'{root}/predict.sh --test_path {smiles} --checkpoint_dir {args.model} --preds_path {out} &> /dev/null'
         cmder.run(cmd)
+
 
 def main():
     output = args.wd / 'predict.smiles.score.csv'
