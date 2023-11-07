@@ -21,6 +21,11 @@ parser.add_argument('--outdir', help="Path to output directory for saving SDF fi
 parser.add_argument('--extension', help="Extension of prepare ligand library files, default: %(default)s",
                     default='.sdf.gz')
 
+parser.add_argument('--receptor', help="Path to prepared rigid receptor in .pdbqt format file", type=vstool.check_file)
+parser.add_argument('--center', help="The X, Y, and Z coordinates of the center", type=float, nargs='+')
+parser.add_argument('--size', help="The size in the X, Y, and Z dimension (Angstroms)",
+                    type=int, nargs='*', default=[15, 15, 15])
+
 parser.add_argument('--debug', help='Enable debug mode (for development purpose).', action='store_true')
 parser.add_argument('--version', version=vstool.get_version(__package__), action='version')
 
@@ -46,8 +51,22 @@ def main():
     processes = min(len(ligands), cpu_count())
 
     logger.debug(f'Sampling {len(ligands):,} libraries ...')
-    vstool.parallel_cpu_task(sampling, ligands, percent=args.percent, outdir=args.outdir, processes=processes)
+    outs = vstool.parallel_cpu_task(sampling, ligands, percent=args.percent, outdir=args.outdir, processes=processes)
     logger.debug(f'Sampling {len(ligands):,} libraries complete.')
+
+    if outs and args.receptor:
+        cmds = []
+        (cx, cy, cz), (sx, sy, sz) = args.center, args.size
+        for out in outs:
+            cmd = f'docking {out} {args.receptor} --center {cx} {cy} {cz} --size {sx} {sy} {sz}'
+            if args.debug:
+                cmd = f'{cmd} --debug'
+            cmds.append(cmd)
+
+        output = args.outdir / 'docking.commands.txt'
+        with open(output, 'w') as o:
+            o.writelines(f'{cmd}\n' for cmd in cmds)
+            logger.debug(f'Successfully saved {len(cmds):,} docking commands to {output}')
 
 
 if __name__ == '__main__':

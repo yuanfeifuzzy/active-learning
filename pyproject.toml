@@ -31,3 +31,7 @@ dependencies = [
 [project.scripts]
 sampling = "active_learning.sampling:main"
 docking = "active_learning.docking:main"
+scoring = "active_learning.scoring:main"
+modeling = "active_learning.modeling:main"
+evaluating = "active_learning.evaluating:main"
+active-learning = "active_learning.active_learning:main"
