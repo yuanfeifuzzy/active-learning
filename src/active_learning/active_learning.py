@@ -19,8 +19,9 @@ parser = argparse.ArgumentParser(prog='active-learning', description=__doc__.str
 parser.add_argument('library', help="Path to a directory contains prepared ligand libraries", type=vstool.check_dir)
 parser.add_argument('receptor', help="Path to prepared rigid receptor in .pdbqt format file", type=vstool.check_file)
 parser.add_argument('--percent', help="Percentage of random compounds need to sample, default: %(default)s",
-                    default=1, type=float)
-parser.add_argument('--center', help="The X, Y, and Z coordinates of the center", type=float, nargs='+')
+                    default=0.1, type=float, required=True)
+parser.add_argument('--center', help="The X, Y, and Z coordinates of the center", type=float,
+                    nargs='+', required=True)
 parser.add_argument('--size', help="The size in the X, Y, and Z dimension (Angstroms)",
                     type=int, nargs='*', default=[15, 15, 15])
 parser.add_argument('--outdir', help="Path to output directory for saving result files", type=vstool.mkdir)
@@ -44,7 +45,6 @@ args = parser.parse_args()
 logger = vstool.setup_logger(verbose=True)
 
     
-
 def main():
     setattr(args, 'scratch', vstool.mkdir(f'{args.scratch}/{args.outdir.name}'))
     setattr(args, 'nodes', 2 if args.debug else args.nodes)
@@ -72,12 +72,12 @@ def main():
 
     docking = ['module load launcher_gpu', f'export LAUNCHER_WORKDIR={wd}',
                f'export LAUNCHER_JOB_FILE={wd}/docking.commands.txt', '',
-               '${{LAUNCHER_DIR}}/paramrun', '']
+               '"${{LAUNCHER_DIR}}"/paramrun', '']
     docking = '\n'.join(docking)
 
     scoring = f'scoring {wd} --debug'
     modeling = f'modeling {wd}/train.smiles.score.csv {args.scratch}/model --debug'
-    evaluating = f'evaluating {wd} {wd}/model --debug'
+    evaluating = f'evaluating {args.library} {wd}/model --debug'
 
     cmd = '\n'.join([source, cd, sampling, docking, scoring, modeling, evaluating])
     vstool.submit(cmd, nodes=args.nodes, ntasks=ntasks, ntasks_per_node=ntasks_per_node,

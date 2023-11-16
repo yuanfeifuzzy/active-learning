@@ -40,7 +40,12 @@ def main():
         ss = list(args.wd.glob('*.smiles'))
 
         logger.debug(f'Predicting docking scores ...')
-        vstool.parallel_cpu_task(predict, ss)
+        if len(ss) == 1:
+            predict(ss[0])
+        elif len(ss) > 1:
+            vstool.parallel_cpu_task(predict, ss)
+        else:
+            raise ValueError(f'No SMILES files found in {args.wd}')
         logger.debug(f'Predicting docking scores complete.')
 
         cmder.run(f'cat {args.wd}/*.predict.smiles.score.csv > {output}')

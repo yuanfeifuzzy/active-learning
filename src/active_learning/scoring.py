@@ -32,8 +32,8 @@ def parse(sdf):
             if mol:
                 try:
                     s = Chem.MolToSmiles(mol)
-                    score = mol.GetProp('score')
-                    ss.append(f'{s},{score}')
+                    score, title = mol.GetProp('score'), mol.GetProp('_Name')
+                    ss.append(f'{s},{title},{score}')
                 except Exception as e:
                     logger.error(f'Failed to convert mol to SMILES and get score due to {e}')
     if ss:
@@ -54,7 +54,8 @@ def main():
         vstool.parallel_cpu_task(parse, outs)
         logger.debug(f'Getting docking poses and scores complete.')
 
-        cmder.run(f'cat {args.wd}/*.csv > {output}', exit_on_error=True)
+        cmder.run(f'cat smiles,title,score > {output}', exit_on_error=True)
+        cmder.run(f'cat {args.wd}/*.csv >> {output}', exit_on_error=True)
         logger.debug(f'Successfully saved SMILES and scores to {output}')
 
 
